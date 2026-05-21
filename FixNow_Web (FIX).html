@@ -1,0 +1,1584 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FixNow — Platform Servis Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --orange: #F97316;
+    --orange-light: #FFF7ED;
+    --orange-dark: #EA580C;
+    --blue-dark: #1E3A5F;
+    --gray-bg: #F8F9FA;
+    --text: #111827;
+    --text-muted: #6B7280;
+    --border: rgba(0,0,0,0.1);
+    --white: #FFFFFF;
+    --radius: 14px;
+    --font: 'Plus Jakarta Sans', sans-serif;
+  }
+  body { font-family: var(--font); background: var(--gray-bg); color: var(--text); min-height: 100vh; }
+
+  /* ===== ONBOARDING OVERLAY ===== */
+  #onboarding-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 999;
+    background: linear-gradient(160deg, #1E3A5F 0%, #0F2442 100%);
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  #onboarding-overlay.show { display: flex; }
+  .onboard-card {
+    background: white; border-radius: 28px; padding: 40px 32px;
+    max-width: 420px; width: 100%; text-align: center;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.3);
+  }
+  .onboard-logo { font-size: 48px; font-weight: 800; color: var(--blue-dark); letter-spacing: -2px; margin-bottom: 8px; }
+  .onboard-logo span { color: var(--orange); }
+  .onboard-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: var(--text); }
+  .onboard-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.6; }
+  .onboard-input {
+    width: 100%; padding: 16px; border-radius: 14px;
+    border: 2px solid var(--border); outline: none; font-size: 16px;
+    font-family: var(--font); color: var(--text); text-align: center;
+    margin-bottom: 16px; transition: border 0.2s;
+  }
+  .onboard-input:focus { border-color: var(--orange); }
+  .onboard-role { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .role-btn {
+    display: flex; align-items: center; gap: 14px; padding: 16px 20px;
+    border-radius: 14px; border: 2px solid var(--border);
+    background: white; cursor: pointer; transition: all 0.15s; text-align: left;
+    font-family: var(--font);
+  }
+  .role-btn:hover { border-color: var(--orange); background: var(--orange-light); }
+  .role-btn.selected { border-color: var(--orange); background: var(--orange-light); }
+  .role-btn-icon { font-size: 28px; }
+  .role-btn-text p:first-child { font-size: 15px; font-weight: 700; color: var(--text); }
+  .role-btn-text p:last-child { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .onboard-cta {
+    width: 100%; padding: 18px; background: var(--orange); color: white;
+    border: none; border-radius: 14px; font-size: 16px; font-weight: 700;
+    cursor: pointer; font-family: var(--font); transition: all 0.15s;
+    opacity: 0.4; pointer-events: none;
+  }
+  .onboard-cta.ready { opacity: 1; pointer-events: all; }
+  .onboard-cta.ready:hover { background: var(--orange-dark); }
+  .onboard-step { font-size: 12px; color: var(--text-muted); margin-top: 16px; }
+
+  /* ===== LAYOUT ===== */
+  .app-wrapper { display: flex; flex-direction: column; min-height: 100vh; max-width: 480px; margin: 0 auto; background: white; box-shadow: 0 0 60px rgba(0,0,0,0.12); position: relative; }
+
+  .screen { display: none; flex-direction: column; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ===== SPLASH ===== */
+  #splash {
+    background: linear-gradient(160deg, #1E3A5F 0%, #0F2442 100%);
+    align-items: center; justify-content: center;
+    gap: 20px; text-align: center; padding: 60px 32px;
+  }
+  .logo-text { font-size: 48px; font-weight: 800; color: white; letter-spacing: -2px; }
+  .logo-text span { color: var(--orange); }
+  .tagline { font-size: 15px; color: rgba(255,255,255,0.65); line-height: 1.6; max-width: 280px; }
+  .splash-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-top: 12px; }
+  .btn-primary {
+    background: var(--orange); color: white; border: none; padding: 16px;
+    border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;
+    font-family: var(--font); transition: all 0.15s;
+  }
+  .btn-primary:hover { background: var(--orange-dark); }
+  .btn-outline {
+    background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.3);
+    padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 600;
+    cursor: pointer; font-family: var(--font); transition: all 0.15s;
+  }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+  .illus { font-size: 80px; }
+
+  /* ===== TOP BAR ===== */
+  .topbar {
+    padding: 16px 20px 12px; background: white;
+    border-bottom: 0.5px solid var(--border);
+    display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-back {
+    width: 36px; height: 36px; background: var(--gray-bg); border-radius: 10px;
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .topbar-title { font-size: 17px; font-weight: 700; flex: 1; }
+
+  /* ===== HOME ===== */
+  #home { background: var(--gray-bg); }
+  .home-header {
+    background: linear-gradient(135deg, #1E3A5F 0%, #0F2442 100%);
+    padding: 24px 20px 36px; position: relative; overflow: hidden;
+  }
+  .home-header::after {
+    content: ''; position: absolute; bottom: -20px; left: 0; right: 0;
+    height: 40px; background: var(--gray-bg); border-radius: 24px 24px 0 0;
+  }
+  .greeting { font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 2px; }
+  .user-name { font-size: 22px; font-weight: 700; color: white; margin-bottom: 16px; }
+  .search-bar {
+    background: white; border-radius: 14px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px; position: relative; z-index: 2; cursor: pointer;
+  }
+  .search-bar input { border: none; outline: none; font-size: 14px; color: var(--text); flex: 1; font-family: var(--font); background: transparent; cursor: pointer; }
+  .search-bar span { font-size: 18px; }
+
+  .section-head { display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 12px; }
+  .section-title { font-size: 16px; font-weight: 700; }
+  .section-link { font-size: 13px; color: var(--orange); font-weight: 600; cursor: pointer; }
+
+  .services-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 0 20px 4px; }
+  .service-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+  .service-icon {
+    width: 60px; height: 60px; background: white; border-radius: 18px;
+    display: flex; align-items: center; justify-content: center; font-size: 26px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.15s;
+  }
+  .service-item:hover .service-icon { background: var(--orange-light); transform: scale(1.06); }
+  .service-name { font-size: 11px; font-weight: 600; color: var(--text-muted); text-align: center; }
+
+  .promo-banner {
+    margin: 8px 20px 0; background: linear-gradient(135deg, var(--orange) 0%, #F59E0B 100%);
+    border-radius: 16px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .promo-text { color: white; }
+  .promo-text h3 { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .promo-text p { font-size: 12px; opacity: 0.85; }
+  .promo-emoji { font-size: 36px; }
+
+  .tech-list { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
+  .tech-card {
+    background: white; border-radius: 16px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06); cursor: pointer; transition: all 0.15s;
+  }
+  .tech-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+  .tech-avatar { width: 50px; height: 50px; border-radius: 14px; background: var(--orange-light); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .tech-info { flex: 1; min-width: 0; }
+  .tech-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .tech-spec { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .tech-footer { display: flex; align-items: center; justify-content: space-between; }
+  .tech-rating { font-size: 12px; font-weight: 600; color: var(--orange); }
+  .tech-distance { font-size: 11px; color: var(--text-muted); }
+  .tech-avail { font-size: 11px; font-weight: 600; padding: 4px 10px; background: #ECFDF5; color: #059669; border-radius: 8px; }
+
+  /* ===== ORDER ===== */
+  #order { background: var(--gray-bg); }
+  .form-card { background: white; border-radius: 16px; padding: 16px; margin: 0 16px 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.05); }
+  .form-label { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .service-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 8px 14px; border-radius: 10px; border: 1.5px solid var(--border);
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    font-family: var(--font); background: white; color: var(--text); display: flex; align-items: center; gap: 6px;
+  }
+  .chip.active { background: var(--orange); color: white; border-color: var(--orange); }
+  .chip:hover:not(.active) { border-color: var(--orange); color: var(--orange); }
+  .form-input {
+    width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1.5px solid var(--border); outline: none; font-size: 14px;
+    font-family: var(--font); color: var(--text); transition: border 0.15s; resize: none;
+  }
+  .form-input:focus { border-color: var(--orange); }
+  .price-estimate { background: var(--orange-light); border-radius: 12px; padding: 14px 16px; margin-top: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .price-est-label { font-size: 13px; color: var(--orange-dark); font-weight: 600; }
+  .price-est-value { font-size: 20px; font-weight: 800; color: var(--orange-dark); }
+  .pay-options { display: flex; flex-direction: column; gap: 8px; }
+  .pay-opt { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--border); cursor: pointer; transition: all 0.15s; background: white; }
+  .pay-opt.active { border-color: var(--orange); background: var(--orange-light); }
+  .pay-opt-icon { font-size: 22px; }
+  .pay-opt-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .pay-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); transition: all 0.15s; }
+  .pay-opt.active .pay-check { background: var(--orange); border-color: var(--orange); }
+  .btn-order { margin: 0 16px 24px; padding: 18px; background: var(--orange); color: white; border: none; border-radius: 16px; font-size: 16px; font-weight: 700; cursor: pointer; font-family: var(--font); width: calc(100% - 32px); transition: all 0.15s; }
+  .btn-order:hover { background: var(--orange-dark); }
+
+  /* ===== TRACKING ===== */
+  #tracking { background: var(--gray-bg); }
+  .map-placeholder { height: 200px; background: linear-gradient(135deg, #E8F4FD, #D1E9F7); position: relative; overflow: hidden; margin: 0 16px; border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+  .map-grid { position: absolute; inset: 0; opacity: 0.15; background-image: linear-gradient(#1E3A5F 1px, transparent 1px), linear-gradient(90deg, #1E3A5F 1px, transparent 1px); background-size: 30px 30px; }
+  .map-pin { font-size: 36px; position: relative; z-index: 2; animation: bounce 1.2s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .route-line { position: absolute; width: 80%; height: 3px; border-radius: 3px; opacity: 0.7; z-index: 1; background: repeating-linear-gradient(90deg, var(--orange) 0px, var(--orange) 12px, transparent 12px, transparent 20px); }
+  .tracking-card { background: white; border-radius: 16px; margin: 12px 16px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .status-bar { display: flex; justify-content: space-between; margin-bottom: 16px; position: relative; }
+  .status-bar::before { content: ''; position: absolute; top: 14px; left: 10%; right: 10%; height: 2px; background: var(--border); }
+  .status-bar::after { content: ''; position: absolute; top: 14px; left: 10%; width: 50%; height: 2px; background: var(--orange); }
+  .status-step { display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 1; }
+  .status-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .status-dot.done { background: var(--orange); color: white; }
+  .status-dot.active { background: white; border: 2.5px solid var(--orange); color: var(--orange); font-size: 10px; font-weight: 700; }
+  .status-dot.pending { background: var(--gray-bg); color: var(--text-muted); }
+  .status-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-align: center; }
+  .tech-en-route { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 0.5px solid var(--border); }
+  .tech-en-route .avatar { width: 50px; height: 50px; border-radius: 14px; background: var(--orange-light); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .en-info { flex: 1; }
+  .en-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .en-eta { font-size: 13px; color: var(--text-muted); }
+  .en-eta span { color: var(--orange); font-weight: 700; }
+  .action-btns { display: flex; gap: 8px; }
+  .action-btn { width: 40px; height: 40px; border-radius: 12px; border: 1.5px solid var(--border); background: white; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .action-btn:hover { background: var(--orange-light); border-color: var(--orange); }
+  .order-detail { padding: 12px 0; border-top: 0.5px solid var(--border); }
+  .od-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; }
+  .od-label { font-size: 13px; color: var(--text-muted); }
+  .od-val { font-size: 13px; font-weight: 600; }
+  .od-val.orange { color: var(--orange); }
+
+  /* ===== PROFILE ===== */
+  #profile { background: var(--gray-bg); }
+  .profile-header { background: linear-gradient(135deg, #1E3A5F, #0F2442); padding: 28px 20px 36px; text-align: center; position: relative; }
+  .profile-header::after { content: ''; position: absolute; bottom: -16px; left: 0; right: 0; height: 32px; background: var(--gray-bg); border-radius: 24px 24px 0 0; }
+  .avatar-big { width: 72px; height: 72px; border-radius: 20px; background: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 12px; border: 3px solid rgba(255,255,255,0.3); }
+  .profile-name { font-size: 22px; font-weight: 700; color: white; margin-bottom: 4px; }
+  .profile-nim { font-size: 13px; color: rgba(255,255,255,0.6); }
+  .profile-stats { display: flex; background: white; border-radius: 16px; margin: 24px 16px 8px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .stat-item { flex: 1; text-align: center; }
+  .stat-item + .stat-item { border-left: 0.5px solid var(--border); }
+  .stat-val { font-size: 20px; font-weight: 800; color: var(--orange); }
+  .stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .menu-list { margin: 0 16px; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .menu-item { display: flex; align-items: center; gap: 14px; padding: 15px 16px; cursor: pointer; transition: background 0.1s; border-bottom: 0.5px solid var(--border); }
+  .menu-item:last-child { border-bottom: none; }
+  .menu-item:hover { background: var(--gray-bg); }
+  .menu-item-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--orange-light); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .menu-item-text { flex: 1; font-size: 14px; font-weight: 600; }
+  .menu-arrow { font-size: 14px; color: var(--text-muted); }
+
+  /* ===== BOTTOM NAV ===== */
+  .bottom-nav { position: sticky; bottom: 0; background: white; border-top: 0.5px solid var(--border); display: flex; padding: 12px 0 20px; z-index: 100; margin-top: auto; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: all 0.15s; }
+  .nav-icon { font-size: 22px; transition: transform 0.15s; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--text-muted); }
+  .nav-item.active .nav-label { color: var(--orange); }
+  .nav-item.active .nav-icon { transform: scale(1.1); }
+  .content-scroll { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+  .section-pad { padding-top: 12px; }
+
+  /* ===== MODAL ===== */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: flex-end; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-sheet { background: white; border-radius: 24px 24px 0 0; padding: 32px 24px 40px; width: 100%; max-width: 480px; text-align: center; }
+  .modal-icon { font-size: 56px; margin-bottom: 12px; }
+  .modal-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .modal-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.6; }
+  .modal-btn { width: 100%; }
+
+  /* ===== TECH SCREENS ===== */
+  #tech-home { background: var(--gray-bg); }
+  #tech-profile { background: var(--gray-bg); }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 0; }
+
+  /* name edit badge */
+  .name-edit-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.15); border-radius: 20px;
+    padding: 4px 12px; cursor: pointer; transition: all 0.15s; margin-top: 6px;
+    border: none; font-family: var(--font); color: rgba(255,255,255,0.8); font-size: 12px;
+  }
+  .name-edit-badge:hover { background: rgba(255,255,255,0.25); }
+
+  /* ===== WEBSITE ADDITIONS ===== */
+  .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px; margin-top: 14px; }
+  .quick-action { background: white; border: none; border-radius: 14px; padding: 12px 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); cursor: pointer; font-family: var(--font); display: flex; flex-direction: column; align-items: center; gap: 7px; min-height: 78px; transition: all 0.15s; }
+  .quick-action:hover { transform: translateY(-2px); background: var(--orange-light); }
+  .quick-action span { font-size: 22px; line-height: 1; }
+  .quick-action p { font-size: 11px; font-weight: 700; color: var(--text); text-align: center; line-height: 1.2; }
+  .feature-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .feature-card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+  .feature-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid var(--border); }
+  .feature-row:last-child { border-bottom: none; }
+  .mini-btn { border: none; border-radius: 10px; padding: 9px 12px; background: var(--orange-light); color: var(--orange-dark); font-weight: 700; cursor: pointer; font-family: var(--font); font-size: 12px; }
+  .mini-btn.dark { background: var(--blue-dark); color: white; }
+  .chat-box { display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto; }
+  .chat-bubble { max-width: 84%; padding: 11px 13px; border-radius: 14px; font-size: 13px; line-height: 1.5; }
+  .chat-bubble.me { align-self: flex-end; background: var(--orange); color: white; border-bottom-right-radius: 4px; }
+  .chat-bubble.them { align-self: flex-start; background: var(--gray-bg); color: var(--text); border-bottom-left-radius: 4px; }
+  .chat-compose { display: flex; gap: 8px; margin-top: 12px; }
+  .chat-compose input { flex: 1; }
+  .admin-access-btn { margin-top: 10px; width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 12px; border-radius: 12px; cursor: pointer; font-family: var(--font); font-weight: 700; }
+
+  @media (min-width: 900px) {
+    body { background: radial-gradient(circle at top left, rgba(249,115,22,0.12), transparent 28%), var(--gray-bg); padding: 24px; }
+    .app-wrapper { max-width: 1180px; min-height: calc(100vh - 48px); border-radius: 24px; overflow: hidden; }
+    .screen { min-height: calc(100vh - 48px); }
+    #splash > div { border-radius: 24px; }
+    .home-header, .profile-header { padding-left: 56px; padding-right: 56px; }
+    .content-scroll { max-width: 980px; width: 100%; margin: 0 auto; }
+    .services-grid { grid-template-columns: repeat(8, 1fr); padding-left: 0; padding-right: 0; }
+    .section-head { padding-left: 0; padding-right: 0; }
+    .promo-banner { margin-left: 0; margin-right: 0; }
+    .tech-list { padding-left: 0; padding-right: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+    .quick-actions { padding-left: 0; padding-right: 0; grid-template-columns: repeat(8, 1fr); }
+    .form-card, .tracking-card, .map-placeholder, .profile-stats, .menu-list { margin-left: 0; margin-right: 0; }
+    .btn-order { width: 100%; margin-left: 0; margin-right: 0; }
+    .feature-grid { grid-template-columns: repeat(2, 1fr); }
+    .bottom-nav { border-radius: 0 0 24px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== ONBOARDING OVERLAY ===== -->
+<div id="onboarding-overlay" class="show">
+  <div class="onboard-card">
+    <div class="onboard-logo" onclick="adminTap()" style="cursor:default;user-select:none;">Fix<span>Now</span></div>
+    <div class="onboard-title">Selamat datang! 👋</div>
+    <div class="onboard-sub">Sebelum mulai, boleh kami tahu nama panggilanmu dan kamu masuk sebagai apa?</div>
+
+    <input id="onboard-name" class="onboard-input" type="text" placeholder="Nama panggilan kamu..." maxlength="30" oninput="checkOnboard()">
+
+    <div class="onboard-role">
+      <button class="role-btn" id="role-pelanggan" onclick="selectRole('pelanggan')">
+        <span class="role-btn-icon">🙋</span>
+        <div class="role-btn-text">
+          <p>Saya Pelanggan</p>
+          <p>Butuh jasa servis perangkat</p>
+        </div>
+      </button>
+      <button class="role-btn" id="role-teknisi" onclick="selectRole('teknisi')">
+        <span class="role-btn-icon">🔧</span>
+        <div class="role-btn-text">
+          <p>Saya Teknisi / Mitra</p>
+          <p>Ingin bergabung & terima order</p>
+        </div>
+      </button>
+    </div>
+
+    <button id="onboard-cta" class="onboard-cta" onclick="finishOnboard()">Mulai Sekarang →</button>
+    <p class="onboard-step">Universitas Pelita Bangsa · Technopreneurship 2026</p>
+  </div>
+</div>
+
+<div class="app-wrapper">
+
+  <!-- ===== SPLASH ===== -->
+  <div id="splash" class="screen active">
+    <div style="background:linear-gradient(160deg,#1E3A5F 0%,#0F2442 100%);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:60px 32px;">
+      <div class="illus">🔧</div>
+      <div class="logo-text" id="logo-tap" onclick="adminTap()" style="cursor:default;user-select:none;">Fix<span>Now</span></div>
+      <p class="tagline">Platform servis digital yang beneran bisa diandalkan. Teknisi profesional, transparan, dan cepat.</p>
+      <p style="font-size:12px;color:rgba(255,255,255,0.4);">Universitas Pelita Bangsa · Technopreneurship 2026</p>
+      <div class="splash-btns">
+        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:4px;">Kamu adalah...</p>
+        <button class="btn-primary" onclick="loginAs('pelanggan')" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;">
+          <span style="font-size:22px;">🙋</span>
+          <div style="text-align:left;">
+            <p style="font-size:15px;font-weight:700;margin:0;">Saya Pelanggan</p>
+            <p style="font-size:12px;opacity:0.8;font-weight:400;margin:0;">Butuh jasa servis perangkat</p>
+          </div>
+        </button>
+        <button class="btn-outline" onclick="loginAs('teknisi')" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 20px;">
+          <span style="font-size:22px;">🔧</span>
+          <div style="text-align:left;">
+            <p style="font-size:15px;font-weight:700;margin:0;">Saya Teknisi / Mitra</p>
+            <p style="font-size:12px;opacity:0.65;font-weight:400;margin:0;">Ingin bergabung & terima order</p>
+          </div>
+        </button>
+        <button class="admin-access-btn" onclick="quickAdminAccess()">🔐 Buka Dashboard Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HOME ===== -->
+  <div id="home" class="screen">
+    <div class="home-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <div>
+          <p class="greeting" id="home-greeting">Selamat pagi 👋</p>
+          <p class="user-name" id="home-username">Pengguna</p>
+          <button class="name-edit-badge" onclick="showNameEdit()">✏️ Ubah nama</button>
+        </div>
+        <div onclick="goTo('notifications')" style="width:38px;height:38px;background:rgba(255,255,255,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">🔔</div>
+      </div>
+      <div class="search-bar" onclick="goTo('order')" style="margin-top:16px;">
+        <span>🔍</span>
+        <input placeholder="Cari layanan servis..." readonly>
+      </div>
+    </div>
+
+    <div class="content-scroll">
+      <div class="section-pad">
+        <div class="section-head"><p class="section-title">Layanan</p></div>
+        <div class="services-grid">
+          <div class="service-item" onclick="selectService('smartphone')"><div class="service-icon">📱</div><p class="service-name">Smartphone</p></div>
+          <div class="service-item" onclick="selectService('laptop')"><div class="service-icon">💻</div><p class="service-name">Laptop</p></div>
+          <div class="service-item" onclick="selectService('ac')"><div class="service-icon">❄️</div><p class="service-name">AC</p></div>
+          <div class="service-item" onclick="selectService('kulkas')"><div class="service-icon">🧊</div><p class="service-name">Kulkas</p></div>
+          <div class="service-item" onclick="selectService('tv')"><div class="service-icon">📺</div><p class="service-name">Televisi</p></div>
+          <div class="service-item" onclick="selectService('mesin-cuci')"><div class="service-icon">🌀</div><p class="service-name">Mesin Cuci</p></div>
+          <div class="service-item" onclick="selectService('listrik')"><div class="service-icon">⚡</div><p class="service-name">Listrik</p></div>
+          <div class="service-item" onclick="goTo('order')"><div class="service-icon">➕</div><p class="service-name">Lainnya</p></div>
+        </div>
+      </div>
+
+
+      <div class="quick-actions">
+        <button class="quick-action" onclick="goTo('voucher')"><span>🎟️</span><p>Voucher</p></button>
+        <button class="quick-action" onclick="goTo('schedule')"><span>📅</span><p>Jadwal</p></button>
+        <button class="quick-action" onclick="goTo('wallet')"><span>💳</span><p>Dompet</p></button>
+        <button class="quick-action" onclick="goTo('chat')"><span>💬</span><p>Chat</p></button>
+        <button class="quick-action" onclick="goTo('address')"><span>📍</span><p>Alamat</p></button>
+        <button class="quick-action" onclick="goTo('support')"><span>❓</span><p>Bantuan</p></button>
+        <button class="quick-action" onclick="goTo('notifications')"><span>🔔</span><p>Notifikasi</p></button>
+        <button class="quick-action" onclick="quickAdminAccess()"><span>🔐</span><p>Admin</p></button>
+      </div>
+      <div class="promo-banner">
+        <div class="promo-text"><h3>Diskon 30% Pengguna Baru!</h3><p>Pakai kode: FIXNOW30</p></div>
+        <div class="promo-emoji">🎉</div>
+      </div>
+
+      <div class="section-head">
+        <p class="section-title">Teknisi Terdekat</p>
+        <p class="section-link" onclick="goTo('order')">Lihat semua</p>
+      </div>
+      <div class="tech-list">
+        <div class="tech-card" onclick="goTo('order')">
+          <div class="tech-avatar">👨‍🔧</div>
+          <div class="tech-info">
+            <p class="tech-name">Budi Santoso</p>
+            <p class="tech-spec">Smartphone & Laptop · 5 tahun exp.</p>
+            <div class="tech-footer"><p class="tech-rating">⭐ 4.9 (120 ulasan)</p><p class="tech-distance">📍 0.8 km</p><span class="tech-avail">Online</span></div>
+          </div>
+        </div>
+        <div class="tech-card" onclick="goTo('order')">
+          <div class="tech-avatar">👩‍🔧</div>
+          <div class="tech-info">
+            <p class="tech-name">Rina Permata</p>
+            <p class="tech-spec">AC & Kulkas · 7 tahun exp.</p>
+            <div class="tech-footer"><p class="tech-rating">⭐ 4.8 (98 ulasan)</p><p class="tech-distance">📍 1.2 km</p><span class="tech-avail">Online</span></div>
+          </div>
+        </div>
+        <div class="tech-card" onclick="goTo('order')">
+          <div class="tech-avatar">👨‍🔧</div>
+          <div class="tech-info">
+            <p class="tech-name">Dedi Kurniawan</p>
+            <p class="tech-spec">Listrik & Instalasi · 10 tahun exp.</p>
+            <div class="tech-footer"><p class="tech-rating">⭐ 5.0 (204 ulasan)</p><p class="tech-distance">📍 1.5 km</p><span class="tech-avail">Online</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div>
+      <div class="nav-item" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div>
+      <div class="nav-item" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div>
+      <div class="nav-item" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== ORDER ===== -->
+  <div id="order" class="screen">
+    <div class="topbar">
+      <button class="topbar-back" onclick="goTo('home')">←</button>
+      <p class="topbar-title">Buat Pesanan</p>
+    </div>
+    <div class="content-scroll" style="padding-top:16px;">
+      <div class="form-card">
+        <p class="form-label">Pilih Layanan</p>
+        <div class="service-chips">
+          <button class="chip active" id="chip-smartphone" onclick="chipSelect(this,'smartphone')">📱 Smartphone</button>
+          <button class="chip" id="chip-laptop" onclick="chipSelect(this,'laptop')">💻 Laptop</button>
+          <button class="chip" id="chip-ac" onclick="chipSelect(this,'ac')">❄️ AC</button>
+          <button class="chip" id="chip-kulkas" onclick="chipSelect(this,'kulkas')">🧊 Kulkas</button>
+          <button class="chip" id="chip-tv" onclick="chipSelect(this,'tv')">📺 TV</button>
+          <button class="chip" id="chip-mesin-cuci" onclick="chipSelect(this,'mesin-cuci')">🌀 Mesin Cuci</button>
+          <button class="chip" id="chip-listrik" onclick="chipSelect(this,'listrik')">⚡ Listrik</button>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <p class="form-label">Jenis Kerusakan</p>
+        <div class="service-chips" style="margin-bottom:12px;">
+          <button class="chip active damage-chip" onclick="chipSelectGroup(this,'.damage-chip')">Layar Pecah</button>
+          <button class="chip damage-chip" onclick="chipSelectGroup(this,'.damage-chip')">Baterai Drop</button>
+          <button class="chip damage-chip" onclick="chipSelectGroup(this,'.damage-chip')">Tidak Menyala</button>
+          <button class="chip damage-chip" onclick="chipSelectGroup(this,'.damage-chip')">Speaker Rusak</button>
+          <button class="chip damage-chip" onclick="chipSelectGroup(this,'.damage-chip')">Kamera Error</button>
+          <button class="chip damage-chip" onclick="chipSelectGroup(this,'.damage-chip')">Lainnya</button>
+        </div>
+        <textarea class="form-input" rows="3" placeholder="Deskripsikan kerusakan lebih lanjut..."></textarea>
+      </div>
+
+      <div class="form-card">
+        <p class="form-label">Alamat Servis</p>
+        <input class="form-input" type="text" value="Jl. Kampus UPB No. 12, Cikarang" style="margin-bottom:10px;">
+        <div style="height:90px;background:linear-gradient(135deg,#E8F4FD,#D1E9F7);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;color:#1E3A5F;font-weight:600;position:relative;overflow:hidden;">
+          <div style="position:absolute;inset:0;opacity:0.1;background-image:linear-gradient(#1E3A5F 1px,transparent 1px),linear-gradient(90deg,#1E3A5F 1px,transparent 1px);background-size:20px 20px;"></div>
+          <span style="position:relative;z-index:1;">📍 Ketuk untuk ubah lokasi</span>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <p class="form-label">Estimasi Biaya</p>
+        <div class="price-estimate">
+          <div><p class="price-est-label">Perkiraan harga</p><p style="font-size:11px;color:var(--orange-dark);margin-top:2px;">Termasuk biaya kunjungan</p></div>
+          <p class="price-est-value" id="price-display">Rp 150.000</p>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <p class="form-label">Metode Pembayaran</p>
+        <div class="pay-options">
+          <div class="pay-opt active" onclick="selectPay(this)"><div class="pay-opt-icon">💳</div><p class="pay-opt-name">Transfer Bank</p><div class="pay-check"></div></div>
+          <div class="pay-opt" onclick="selectPay(this)"><div class="pay-opt-icon">📱</div><p class="pay-opt-name">GoPay / OVO / Dana</p><div class="pay-check"></div></div>
+          <div class="pay-opt" onclick="selectPay(this)"><div class="pay-opt-icon">💵</div><p class="pay-opt-name">Tunai (COD)</p><div class="pay-check"></div></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-order" id="btn-order-main" onclick="placeOrder()">Pesan Sekarang — Rp 150.000</button>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div>
+      <div class="nav-item active" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div>
+      <div class="nav-item" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div>
+      <div class="nav-item" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== TRACKING ===== -->
+  <div id="tracking" class="screen">
+    <div class="topbar">
+      <button class="topbar-back" onclick="goTo('home')">←</button>
+      <p class="topbar-title">Lacak Teknisi</p>
+    </div>
+    <div class="content-scroll" style="padding-top:16px;">
+      <div style="margin:0 16px 12px;">
+        <div class="map-placeholder"><div class="map-grid"></div><div class="route-line"></div><div class="map-pin">📍</div></div>
+      </div>
+      <div class="tracking-card">
+        <div class="status-bar">
+          <div class="status-step"><div class="status-dot done">✓</div><p class="status-label">Dipesan</p></div>
+          <div class="status-step"><div class="status-dot done">✓</div><p class="status-label">Diterima</p></div>
+          <div class="status-step"><div class="status-dot active">▶</div><p class="status-label">Menuju</p></div>
+          <div class="status-step"><div class="status-dot pending">🔧</div><p class="status-label">Servis</p></div>
+          <div class="status-step"><div class="status-dot pending">✓</div><p class="status-label">Selesai</p></div>
+        </div>
+        <div class="tech-en-route">
+          <div class="avatar">👨‍🔧</div>
+          <div class="en-info">
+            <p class="en-name">Budi Santoso</p>
+            <p class="en-eta">Tiba dalam <span id="eta-count">12 menit</span></p>
+          </div>
+          <div class="action-btns">
+            <button class="action-btn" title="Telepon">📞</button>
+            <button class="action-btn" title="Chat" onclick="goTo('chat')">💬</button>
+          </div>
+        </div>
+        <div class="order-detail">
+          <div class="od-row"><p class="od-label">Layanan</p><p class="od-val" id="order-service-display">Servis Smartphone</p></div>
+          <div class="od-row"><p class="od-label">Kerusakan</p><p class="od-val">Layar Pecah</p></div>
+          <div class="od-row"><p class="od-label">Alamat</p><p class="od-val">Jl. Kampus UPB No. 12</p></div>
+          <div class="od-row"><p class="od-label">Total Biaya</p><p class="od-val orange" id="order-price-display">Rp 150.000</p></div>
+          <div class="od-row"><p class="od-label">Garansi</p><p class="od-val orange">7 hari ✓</p></div>
+        </div>
+      </div>
+      <div style="margin:0 16px 16px;background:var(--orange-light);border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:22px;">⏱</div>
+        <div><p style="font-size:13px;font-weight:700;color:var(--orange-dark);">Respon Cepat Terverifikasi</p><p style="font-size:12px;color:var(--orange-dark);opacity:0.8;">Teknisi dikonfirmasi dalam 8 menit — sesuai target &lt;15 menit FixNow!</p></div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div>
+      <div class="nav-item" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div>
+      <div class="nav-item active" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div>
+      <div class="nav-item" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE ===== -->
+  <div id="profile" class="screen">
+    <div class="profile-header">
+      <div class="avatar-big">👤</div>
+      <p class="profile-name" id="profile-username">Pengguna</p>
+      <p class="profile-nim">Universitas Pelita Bangsa · Technopreneurship 2026</p>
+      <button class="name-edit-badge" onclick="showNameEdit()" style="margin-top:8px;">✏️ Ubah nama</button>
+    </div>
+    <div class="content-scroll">
+      <div class="profile-stats">
+        <div class="stat-item"><p class="stat-val">12</p><p class="stat-label">Total Servis</p></div>
+        <div class="stat-item"><p class="stat-val">4.9</p><p class="stat-label">Rating</p></div>
+        <div class="stat-item"><p class="stat-val">2</p><p class="stat-label">Garansi Aktif</p></div>
+      </div>
+      <div class="menu-list">
+        <div class="menu-item" onclick="goTo('history')"><div class="menu-item-icon">📦</div><p class="menu-item-text">Riwayat Pesanan</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('warranty')"><div class="menu-item-icon">🛡️</div><p class="menu-item-text">Garansi Aktif (2)</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('wallet')"><div class="menu-item-icon">💳</div><p class="menu-item-text">Metode Pembayaran</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('address')"><div class="menu-item-icon">📍</div><p class="menu-item-text">Alamat Tersimpan</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('rating')"><div class="menu-item-icon">⭐</div><p class="menu-item-text">Beri Ulasan Teknisi</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('mitra')"><div class="menu-item-icon">🔧</div><p class="menu-item-text">Daftar sebagai Teknisi Mitra</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('support')"><div class="menu-item-icon">❓</div><p class="menu-item-text">Bantuan & FAQ</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('notifications')"><div class="menu-item-icon">🔔</div><p class="menu-item-text">Notifikasi</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('voucher')"><div class="menu-item-icon">🎟️</div><p class="menu-item-text">Voucher & Promo</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="quickAdminAccess()"><div class="menu-item-icon">🔐</div><p class="menu-item-text">Akses Admin</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="logout()"><div class="menu-item-icon">🚪</div><p class="menu-item-text">Keluar</p><p class="menu-arrow">›</p></div>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div>
+      <div class="nav-item" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div>
+      <div class="nav-item" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div>
+      <div class="nav-item active" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== RIWAYAT ===== -->
+  <div id="history" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('profile')">←</button><p class="topbar-title">Riwayat Pesanan</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button class="chip active hist-tab" onclick="filterHistory(this,'semua')">Semua</button>
+        <button class="chip hist-tab" onclick="filterHistory(this,'selesai')">Selesai</button>
+        <button class="chip hist-tab" onclick="filterHistory(this,'garansi')">Garansi</button>
+      </div>
+      <div class="hist-item" data-status="selesai" style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div style="width:40px;height:40px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">📱</div>
+            <div><p style="font-size:14px;font-weight:700;">Servis Smartphone</p><p style="font-size:12px;color:var(--text-muted);">Layar Pecah · Budi Santoso</p></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;padding:4px 10px;background:#ECFDF5;color:#059669;border-radius:8px;">Selesai</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:0.5px solid var(--border);padding-top:10px;">
+          <div><p style="font-size:12px;color:var(--text-muted);">5 April 2026</p><p style="font-size:14px;font-weight:700;color:var(--orange);">Rp 150.000</p></div>
+          <div style="display:flex;gap:8px;">
+            <button class="chip" style="font-size:12px;padding:6px 12px;" onclick="goTo('rating')">⭐ Beri Nilai</button>
+            <button class="chip" style="font-size:12px;padding:6px 12px;" onclick="goTo('order')">🔄 Pesan Lagi</button>
+          </div>
+        </div>
+      </div>
+      <div class="hist-item" data-status="garansi" style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div style="width:40px;height:40px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">💻</div>
+            <div><p style="font-size:14px;font-weight:700;">Servis Laptop</p><p style="font-size:12px;color:var(--text-muted);">Tidak Menyala · Rina Permata</p></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;padding:4px 10px;background:#FFF7ED;color:var(--orange);border-radius:8px;">🛡 Garansi</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:0.5px solid var(--border);padding-top:10px;">
+          <div><p style="font-size:12px;color:var(--text-muted);">1 April 2026 · Berakhir 8 Apr</p><p style="font-size:14px;font-weight:700;color:var(--orange);">Rp 250.000</p></div>
+          <button class="chip" style="font-size:12px;padding:6px 12px;background:var(--orange);color:white;border-color:var(--orange);" onclick="goTo('warranty')">Klaim Garansi</button>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div>
+      <div class="nav-item" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div>
+      <div class="nav-item" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div>
+      <div class="nav-item active" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== GARANSI ===== -->
+  <div id="warranty" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('profile')">←</button><p class="topbar-title">Garansi Aktif</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="background:var(--orange-light);border-radius:16px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:28px;">🛡️</div>
+        <div><p style="font-size:14px;font-weight:700;color:var(--orange-dark);">Garansi Perbaikan 7 Hari</p><p style="font-size:12px;color:var(--orange-dark);opacity:0.8;">Jika masalah yang sama muncul kembali dalam 7 hari, teknisi kami akan kembali tanpa biaya tambahan.</p></div>
+      </div>
+      <div style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="display:flex;gap:10px;align-items:center;"><div style="font-size:24px;">💻</div><div><p style="font-size:14px;font-weight:700;">Servis Laptop</p><p style="font-size:12px;color:var(--text-muted);">Oleh: Rina Permata</p></div></div>
+          <span style="font-size:11px;font-weight:700;padding:4px 10px;background:#FEF3C7;color:#D97706;border-radius:8px;">3 hari tersisa</span>
+        </div>
+        <div style="background:var(--gray-bg);border-radius:10px;padding:10px 12px;margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><p style="font-size:12px;color:var(--text-muted);">Tanggal servis</p><p style="font-size:12px;font-weight:600;">1 April 2026</p></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><p style="font-size:12px;color:var(--text-muted);">Berlaku hingga</p><p style="font-size:12px;font-weight:600;color:var(--orange);">8 April 2026</p></div>
+          <div style="display:flex;justify-content:space-between;"><p style="font-size:12px;color:var(--text-muted);">No. Pesanan</p><p style="font-size:12px;font-weight:600;">#FN-20260401-002</p></div>
+        </div>
+        <button class="btn-primary" style="width:100%;padding:12px;font-size:14px;" onclick="alert('Klaim garansi berhasil diajukan! Tim kami akan menghubungi kamu dalam 1x24 jam.')">Ajukan Klaim Garansi</button>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div>
+      <div class="nav-item" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div>
+      <div class="nav-item" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div>
+      <div class="nav-item active" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== RATING ===== -->
+  <div id="rating" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('history')">←</button><p class="topbar-title">Beri Ulasan</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="background:white;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);text-align:center;">
+        <div style="width:64px;height:64px;background:var(--orange-light);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 12px;">👨‍🔧</div>
+        <p style="font-size:17px;font-weight:700;margin-bottom:2px;">Budi Santoso</p>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">Servis Smartphone · Layar Pecah</p>
+        <p style="font-size:12px;color:var(--text-muted);">5 April 2026</p>
+      </div>
+      <div style="background:white;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <p style="font-size:14px;font-weight:700;margin-bottom:16px;text-align:center;">Seberapa puas kamu dengan layanan ini?</p>
+        <div id="star-row" style="display:flex;justify-content:center;gap:12px;margin-bottom:8px;">
+          <span class="star" data-val="1" style="font-size:40px;cursor:pointer;opacity:0.3;transition:all 0.15s;" onclick="setRating(1)">⭐</span>
+          <span class="star" data-val="2" style="font-size:40px;cursor:pointer;opacity:0.3;transition:all 0.15s;" onclick="setRating(2)">⭐</span>
+          <span class="star" data-val="3" style="font-size:40px;cursor:pointer;opacity:0.3;transition:all 0.15s;" onclick="setRating(3)">⭐</span>
+          <span class="star" data-val="4" style="font-size:40px;cursor:pointer;opacity:0.3;transition:all 0.15s;" onclick="setRating(4)">⭐</span>
+          <span class="star" data-val="5" style="font-size:40px;cursor:pointer;opacity:0.3;transition:all 0.15s;" onclick="setRating(5)">⭐</span>
+        </div>
+        <p id="rating-label" style="font-size:14px;font-weight:600;text-align:center;color:var(--text-muted);margin-bottom:16px;">Ketuk bintang untuk memberi nilai</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+          <button class="chip qtag" onclick="toggleTag(this)">Tepat waktu</button>
+          <button class="chip qtag" onclick="toggleTag(this)">Rapi & bersih</button>
+          <button class="chip qtag" onclick="toggleTag(this)">Harga sesuai estimasi</button>
+          <button class="chip qtag" onclick="toggleTag(this)">Ramah & profesional</button>
+          <button class="chip qtag" onclick="toggleTag(this)">Hasil memuaskan</button>
+          <button class="chip qtag" onclick="toggleTag(this)">Komunikatif</button>
+        </div>
+        <textarea class="form-input" rows="3" placeholder="Tambahkan komentar (opsional)..."></textarea>
+      </div>
+      <button class="btn-primary" style="width:100%;margin-bottom:24px;" onclick="submitRating()">Kirim Ulasan</button>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div>
+      <div class="nav-item" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div>
+      <div class="nav-item" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div>
+      <div class="nav-item active" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== MITRA ===== -->
+  <div id="mitra" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('profile')">←</button><p class="topbar-title">Daftar sebagai Mitra</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="background:linear-gradient(135deg,#1E3A5F,#0F2442);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;">
+        <p style="font-size:32px;margin-bottom:8px;">🔧</p>
+        <p style="font-size:18px;font-weight:800;color:white;margin-bottom:6px;">Bergabunglah sebagai Teknisi Mitra FixNow</p>
+        <p style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.6;">Jangkau lebih banyak pelanggan, kelola jadwal sendiri, dan tingkatkan penghasilan kamu.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:22px;font-weight:800;color:var(--orange);">500+</p><p style="font-size:12px;color:var(--text-muted);">Teknisi Aktif</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:22px;font-weight:800;color:var(--orange);">10-15%</p><p style="font-size:12px;color:var(--text-muted);">Komisi per Order</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:22px;font-weight:800;color:var(--orange);">Fleksibel</p><p style="font-size:12px;color:var(--text-muted);">Atur Jadwal Sendiri</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:22px;font-weight:800;color:var(--orange);">Gratis</p><p style="font-size:12px;color:var(--text-muted);">Biaya Pendaftaran</p></div>
+      </div>
+      <div style="background:white;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <p style="font-size:14px;font-weight:700;margin-bottom:14px;">Formulir Pendaftaran</p>
+        <p class="form-label">Nama Lengkap</p>
+        <input class="form-input" type="text" placeholder="Masukkan nama lengkap" style="margin-bottom:12px;">
+        <p class="form-label">Nomor HP</p>
+        <input class="form-input" type="tel" placeholder="08xxxxxxxxxx" style="margin-bottom:12px;">
+        <p class="form-label">Keahlian Utama</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+          <button class="chip skill-chip" onclick="toggleTag(this)">📱 Smartphone</button>
+          <button class="chip skill-chip" onclick="toggleTag(this)">💻 Laptop</button>
+          <button class="chip skill-chip" onclick="toggleTag(this)">❄️ AC</button>
+          <button class="chip skill-chip" onclick="toggleTag(this)">🧊 Kulkas</button>
+          <button class="chip skill-chip" onclick="toggleTag(this)">📺 TV</button>
+          <button class="chip skill-chip" onclick="toggleTag(this)">⚡ Listrik</button>
+        </div>
+        <p class="form-label">Pengalaman Kerja</p>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button class="chip exp-chip active" onclick="chipSelectGroup(this,'.exp-chip')">&lt;2 tahun</button>
+          <button class="chip exp-chip" onclick="chipSelectGroup(this,'.exp-chip')">2-5 tahun</button>
+          <button class="chip exp-chip" onclick="chipSelectGroup(this,'.exp-chip')">5+ tahun</button>
+        </div>
+        <p class="form-label">Area Layanan</p>
+        <input class="form-input" type="text" placeholder="Contoh: Cikarang, Bekasi" style="margin-bottom:12px;">
+        <div style="background:var(--orange-light);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--orange-dark);line-height:1.6;">⚠️ Semua teknisi wajib melalui <strong>verifikasi identitas</strong> dan <strong>uji kompetensi</strong> sebelum dapat menerima order.</div>
+      </div>
+      <button class="btn-primary" style="width:100%;margin-bottom:24px;" onclick="submitMitra()">Daftar Sekarang</button>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div>
+      <div class="nav-item" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div>
+      <div class="nav-item" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div>
+      <div class="nav-item active" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== TEKNISI: HOME ===== -->
+  <div id="tech-home" class="screen">
+    <div style="background:linear-gradient(135deg,#0F2442 0%,#1a3a6e 100%);padding:24px 20px 36px;position:relative;overflow:hidden;">
+      <div style="position:absolute;bottom:-20px;left:0;right:0;height:40px;background:var(--gray-bg);border-radius:24px 24px 0 0;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+        <div>
+          <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:2px;">Dashboard Teknisi 👨‍🔧</p>
+          <p style="font-size:20px;font-weight:700;color:white;" id="tech-home-name">Teknisi</p>
+          <button class="name-edit-badge" onclick="showNameEdit()">✏️ Ubah nama</button>
+        </div>
+        <div onclick="toggleOnline()" style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);border-radius:20px;padding:6px 12px;cursor:pointer;">
+          <div id="status-dot" style="width:8px;height:8px;border-radius:50%;background:#22C55E;"></div>
+          <p id="status-text" style="font-size:13px;font-weight:600;color:white;">Online</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;position:relative;z-index:2;">
+        <div style="flex:1;background:rgba(255,255,255,0.12);border-radius:14px;padding:12px;text-align:center;"><p style="font-size:22px;font-weight:800;color:white;">Rp 420rb</p><p style="font-size:11px;color:rgba(255,255,255,0.65);">Pendapatan Hari Ini</p></div>
+        <div style="flex:1;background:rgba(255,255,255,0.12);border-radius:14px;padding:12px;text-align:center;"><p style="font-size:22px;font-weight:800;color:white;">3</p><p style="font-size:11px;color:rgba(255,255,255,0.65);">Order Selesai</p></div>
+        <div style="flex:1;background:rgba(255,255,255,0.12);border-radius:14px;padding:12px;text-align:center;"><p style="font-size:22px;font-weight:800;color:white;">⭐ 4.9</p><p style="font-size:11px;color:rgba(255,255,255,0.65);">Rating Kamu</p></div>
+      </div>
+    </div>
+    <div class="content-scroll">
+      <div style="padding:16px 20px 8px;display:flex;align-items:center;justify-content:space-between;">
+        <p style="font-size:16px;font-weight:700;">Order Masuk</p>
+        <span style="background:var(--orange);color:white;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">2 baru</span>
+      </div>
+      <div style="margin:0 16px 12px;background:white;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(249,115,22,0.15);border:1.5px solid var(--orange);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div style="width:42px;height:42px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">📱</div>
+            <div><p style="font-size:14px;font-weight:700;">Servis Smartphone</p><p style="font-size:12px;color:var(--text-muted);">Layar Pecah · Pelanggan</p></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;padding:4px 10px;background:var(--orange-light);color:var(--orange);border-radius:8px;">Baru!</span>
+        </div>
+        <div style="background:var(--gray-bg);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="color:var(--text-muted);">Jarak</span><span style="font-weight:600;">0.8 km dari kamu</span></div>
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Estimasi biaya</span><span style="font-weight:700;color:var(--orange);">Rp 150.000</span></div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button style="flex:1;padding:12px;background:white;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);" onclick="rejectOrder(this)">Tolak</button>
+          <button style="flex:2;padding:12px;background:var(--orange);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);" onclick="acceptOrder(this)">Terima Order ✓</button>
+        </div>
+      </div>
+      <div style="padding:4px 20px 8px;"><p style="font-size:16px;font-weight:700;">Pendapatan Minggu Ini</p></div>
+      <div style="margin:0 16px 16px;background:white;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <p style="font-size:24px;font-weight:800;color:var(--orange);">Rp 1.850.000</p>
+          <span style="font-size:12px;font-weight:600;color:#059669;background:#ECFDF5;padding:4px 10px;border-radius:8px;">+12% vs minggu lalu</span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:flex-end;height:60px;">
+          <div style="flex:1;background:var(--orange-light);border-radius:4px 4px 0 0;height:30%;"></div>
+          <div style="flex:1;background:var(--orange);border-radius:4px 4px 0 0;height:70%;"></div>
+          <div style="flex:1;background:var(--orange-light);border-radius:4px 4px 0 0;height:50%;"></div>
+          <div style="flex:1;background:var(--orange);border-radius:4px 4px 0 0;height:90%;"></div>
+          <div style="flex:1;background:var(--orange-light);border-radius:4px 4px 0 0;height:40%;"></div>
+          <div style="flex:1;background:var(--orange);border-radius:4px 4px 0 0;height:100%;"></div>
+          <div style="flex:1;background:var(--orange-light);border-radius:4px 4px 0 0;height:30%;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="goTo('tech-home')"><div class="nav-icon">🏠</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item" onclick="goTo('tech-active')"><div class="nav-icon">📋</div><p class="nav-label">Order Aktif</p></div>
+      <div class="nav-item" onclick="goTo('tech-history')"><div class="nav-icon">📊</div><p class="nav-label">Riwayat</p></div>
+      <div class="nav-item" onclick="goTo('tech-profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== TEKNISI: ORDER AKTIF ===== -->
+  <div id="tech-active" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('tech-home')">←</button><p class="topbar-title">Order Aktif</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <p style="font-size:15px;font-weight:700;">Detail Order</p>
+          <span style="font-size:11px;font-weight:700;padding:4px 10px;background:#EFF6FF;color:#2563EB;border-radius:8px;">Sedang berjalan</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:0.5px solid var(--border);">
+          <div style="width:48px;height:48px;background:#EFF6FF;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;">💻</div>
+          <div><p style="font-size:15px;font-weight:700;">Servis Laptop</p><p style="font-size:12px;color:var(--text-muted);">Tidak Menyala · Ahmad Reza</p></div>
+        </div>
+        <div style="font-size:13px;display:flex;flex-direction:column;gap:8px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;"><span style="color:var(--text-muted);">Harga disepakati</span><span style="font-weight:700;color:var(--orange);">Rp 250.000</span></div>
+          <div style="display:flex;justify-content:space-between;border-top:0.5px solid var(--border);padding-top:8px;"><span style="font-weight:700;">Kamu terima</span><span style="font-weight:800;color:var(--orange);">Rp 220.000</span></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button style="flex:1;padding:11px;background:var(--gray-bg);border:none;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);">📞 Hubungi</button>
+          <button style="flex:1;padding:11px;background:var(--gray-bg);border:none;border-radius:11px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);" onclick="goTo('chat')">💬 Chat</button>
+        </div>
+        <button style="width:100%;padding:14px;background:var(--orange);color:white;border:none;border-radius:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);" onclick="finishOrder()">Servis Selesai — Konfirmasi ✓</button>
+      </div>
+      <div style="background:white;border-radius:14px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <p style="font-size:13px;font-weight:700;margin-bottom:10px;">Status Pengerjaan</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;"><input type="checkbox" checked style="accent-color:var(--orange);width:16px;height:16px;"> Tiba di lokasi pelanggan</label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;"><input type="checkbox" checked style="accent-color:var(--orange);width:16px;height:16px;"> Diagnosa kerusakan selesai</label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;"><input type="checkbox" style="accent-color:var(--orange);width:16px;height:16px;"> Perbaikan selesai</label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;"><input type="checkbox" style="accent-color:var(--orange);width:16px;height:16px;"> Pembayaran diterima</label>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('tech-home')"><div class="nav-icon">🏠</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item active" onclick="goTo('tech-active')"><div class="nav-icon">📋</div><p class="nav-label">Order Aktif</p></div>
+      <div class="nav-item" onclick="goTo('tech-history')"><div class="nav-icon">📊</div><p class="nav-label">Riwayat</p></div>
+      <div class="nav-item" onclick="goTo('tech-profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== TEKNISI: RIWAYAT ===== -->
+  <div id="tech-history" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('tech-home')">←</button><p class="topbar-title">Riwayat & Pendapatan</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:20px;font-weight:800;color:var(--orange);">47</p><p style="font-size:11px;color:var(--text-muted);">Total Order</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:20px;font-weight:800;color:var(--orange);">Rp 8,2jt</p><p style="font-size:11px;color:var(--text-muted);">Total Pendapatan</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:20px;font-weight:800;color:var(--orange);">⭐ 4.9</p><p style="font-size:11px;color:var(--text-muted);">Rating Rata-rata</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:20px;font-weight:800;color:var(--orange);">98%</p><p style="font-size:11px;color:var(--text-muted);">Tingkat Selesai</p></div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('tech-home')"><div class="nav-icon">🏠</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item" onclick="goTo('tech-active')"><div class="nav-icon">📋</div><p class="nav-label">Order Aktif</p></div>
+      <div class="nav-item active" onclick="goTo('tech-history')"><div class="nav-icon">📊</div><p class="nav-label">Riwayat</p></div>
+      <div class="nav-item" onclick="goTo('tech-profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== TEKNISI: PROFIL ===== -->
+  <div id="tech-profile" class="screen">
+    <div style="background:linear-gradient(135deg,#0F2442,#1a3a6e);padding:28px 20px 36px;text-align:center;position:relative;">
+      <div style="position:absolute;bottom:-16px;left:0;right:0;height:32px;background:var(--gray-bg);border-radius:24px 24px 0 0;"></div>
+      <div style="width:72px;height:72px;border-radius:20px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 12px;border:3px solid rgba(255,255,255,0.3);">👨‍🔧</div>
+      <p style="font-size:20px;font-weight:700;color:white;margin-bottom:2px;" id="tech-profile-name">Teknisi</p>
+      <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px;">Teknisi Terverifikasi ✓</p>
+      <button class="name-edit-badge" onclick="showNameEdit()">✏️ Ubah nama</button>
+    </div>
+    <div class="content-scroll" style="padding-top:8px;">
+      <div style="display:flex;background:white;border-radius:16px;margin:24px 16px 8px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <div style="flex:1;text-align:center;"><p style="font-size:20px;font-weight:800;color:var(--orange);">47</p><p style="font-size:11px;color:var(--text-muted);">Order</p></div>
+        <div style="flex:1;text-align:center;border-left:0.5px solid var(--border);"><p style="font-size:20px;font-weight:800;color:var(--orange);">⭐4.9</p><p style="font-size:11px;color:var(--text-muted);">Rating</p></div>
+        <div style="flex:1;text-align:center;border-left:0.5px solid var(--border);"><p style="font-size:20px;font-weight:800;color:var(--orange);">5th</p><p style="font-size:11px;color:var(--text-muted);">Bergabung</p></div>
+      </div>
+      <div style="margin:0 16px;background:white;border-radius:16px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <div class="menu-item"><div class="menu-item-icon">📝</div><p class="menu-item-text">Edit Profil & Keahlian</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item"><div class="menu-item-icon">💰</div><p class="menu-item-text">Rekening Pencairan Dana</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item"><div class="menu-item-icon">🗓️</div><p class="menu-item-text">Atur Jadwal Tersedia</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('notifications')"><div class="menu-item-icon">🔔</div><p class="menu-item-text">Notifikasi</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="goTo('voucher')"><div class="menu-item-icon">🎟️</div><p class="menu-item-text">Voucher & Promo</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="quickAdminAccess()"><div class="menu-item-icon">🔐</div><p class="menu-item-text">Akses Admin</p><p class="menu-arrow">›</p></div>
+        <div class="menu-item" onclick="logout()"><div class="menu-item-icon">🚪</div><p class="menu-item-text">Keluar</p><p class="menu-arrow">›</p></div>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('tech-home')"><div class="nav-icon">🏠</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item" onclick="goTo('tech-active')"><div class="nav-icon">📋</div><p class="nav-label">Order Aktif</p></div>
+      <div class="nav-item" onclick="goTo('tech-history')"><div class="nav-icon">📊</div><p class="nav-label">Riwayat</p></div>
+      <div class="nav-item active" onclick="goTo('tech-profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN: HOME ===== -->
+  <div id="admin-home" class="screen">
+    <div style="background:linear-gradient(135deg,#1E3A5F 0%,#0F2442 100%);padding:24px 20px 36px;position:relative;overflow:hidden;">
+      <div style="position:absolute;bottom:-20px;left:0;right:0;height:40px;background:var(--gray-bg);border-radius:24px 24px 0 0;"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <div>
+          <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:2px;">Admin Dashboard 👑</p>
+          <p style="font-size:20px;font-weight:700;color:white;">FixNow Platform</p>
+        </div>
+        <div style="background:rgba(249,115,22,0.25);border-radius:12px;padding:8px 12px;text-align:center;">
+          <p style="font-size:18px;font-weight:800;color:var(--orange);">Rp 2,4jt</p>
+          <p style="font-size:10px;color:rgba(255,255,255,0.6);">Komisi Hari Ini</p>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;position:relative;z-index:2;">
+        <div style="flex:1;background:rgba(255,255,255,0.1);border-radius:12px;padding:10px;text-align:center;"><p style="font-size:18px;font-weight:800;color:white;">128</p><p style="font-size:10px;color:rgba(255,255,255,0.6);">Order Hari Ini</p></div>
+        <div style="flex:1;background:rgba(255,255,255,0.1);border-radius:12px;padding:10px;text-align:center;"><p style="font-size:18px;font-weight:800;color:white;">47</p><p style="font-size:10px;color:rgba(255,255,255,0.6);">Teknisi Aktif</p></div>
+        <div style="flex:1;background:rgba(255,255,255,0.1);border-radius:12px;padding:10px;text-align:center;"><p style="font-size:18px;font-weight:800;color:white;">1.2rb</p><p style="font-size:10px;color:rgba(255,255,255,0.6);">Total User</p></div>
+        <div style="flex:1;background:rgba(255,255,255,0.1);border-radius:12px;padding:10px;text-align:center;"><p style="font-size:18px;font-weight:800;color:#22C55E;">4.9⭐</p><p style="font-size:10px;color:rgba(255,255,255,0.6);">Rata Rating</p></div>
+      </div>
+    </div>
+    <div class="content-scroll">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 16px 8px;">
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);cursor:pointer;" onclick="goTo('admin-teknisi')"><div style="font-size:28px;margin-bottom:8px;">👨‍🔧</div><p style="font-size:14px;font-weight:700;">Kelola Teknisi</p><p style="font-size:12px;color:var(--text-muted);">3 menunggu verifikasi</p></div>
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);cursor:pointer;" onclick="goTo('admin-orders')"><div style="font-size:28px;margin-bottom:8px;">📋</div><p style="font-size:14px;font-weight:700;">Semua Order</p><p style="font-size:12px;color:var(--text-muted);">128 aktif hari ini</p></div>
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);cursor:pointer;" onclick="goTo('admin-finance')"><div style="font-size:28px;margin-bottom:8px;">💰</div><p style="font-size:14px;font-weight:700;">Keuangan</p><p style="font-size:12px;color:var(--text-muted);">Komisi & pencairan</p></div>
+        <div style="background:white;border-radius:16px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);cursor:pointer;" onclick="goTo('admin-users')"><div style="font-size:28px;margin-bottom:8px;">👥</div><p style="font-size:14px;font-weight:700;">Pengguna</p><p style="font-size:12px;color:var(--text-muted);">1.247 terdaftar</p></div>
+      </div>
+      <div style="padding:0 16px 8px;display:flex;justify-content:space-between;align-items:center;"><p style="font-size:15px;font-weight:700;">Perlu Tindakan</p><span style="background:#FEE2E2;color:#DC2626;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">3 pending</span></div>
+      <div style="margin:0 16px 24px;display:flex;flex-direction:column;gap:10px;">
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;background:#FEF3C7;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;">🔧</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:700;">Andi Prasetyo ingin bergabung</p><p style="font-size:11px;color:var(--text-muted);">Keahlian: Listrik · Bekasi</p></div>
+          <div style="display:flex;gap:6px;">
+            <button style="padding:6px 10px;background:#ECFDF5;color:#059669;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);" onclick="approveVerif(this)">✓</button>
+            <button style="padding:6px 10px;background:#FEE2E2;color:#DC2626;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);" onclick="rejectVerif(this)">✗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item active" onclick="goTo('admin-home')"><div class="nav-icon">📊</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item" onclick="goTo('admin-orders')"><div class="nav-icon">📋</div><p class="nav-label">Order</p></div>
+      <div class="nav-item" onclick="goTo('admin-teknisi')"><div class="nav-icon">👨‍🔧</div><p class="nav-label">Teknisi</p></div>
+      <div class="nav-item" onclick="goTo('admin-finance')"><div class="nav-icon">💰</div><p class="nav-label">Keuangan</p></div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN: SEMUA ORDER ===== -->
+  <div id="admin-orders" class="screen">
+    <div class="topbar">
+      <button class="topbar-back" onclick="goTo('admin-home')">←</button>
+      <p class="topbar-title">Semua Order</p>
+      <span style="background:var(--orange);color:white;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">128 aktif</span>
+    </div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;">
+        <button class="chip active order-tab" onclick="chipSelectGroup(this,'.order-tab')" style="white-space:nowrap;">Semua (340)</button>
+        <button class="chip order-tab" onclick="chipSelectGroup(this,'.order-tab')" style="white-space:nowrap;">Aktif (128)</button>
+        <button class="chip order-tab" onclick="chipSelectGroup(this,'.order-tab')" style="white-space:nowrap;">Selesai (198)</button>
+        <button class="chip order-tab" onclick="chipSelectGroup(this,'.order-tab')" style="white-space:nowrap;">Dibatalkan (14)</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div style="display:flex;gap:8px;align-items:center;"><span style="font-size:20px;">📱</span><div><p style="font-size:13px;font-weight:700;">Servis Smartphone</p><p style="font-size:11px;color:var(--text-muted);">Pelanggan → Budi Santoso</p></div></div>
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;background:#EFF6FF;color:#2563EB;border-radius:6px;">Aktif</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;border-top:0.5px solid var(--border);padding-top:8px;">
+            <span style="color:var(--text-muted);">#FN-20260412-001 · 09:23</span>
+            <div style="text-align:right;"><span style="font-weight:700;">Rp 150.000</span> <span style="color:var(--orange);font-weight:600;">(+Rp 22.500 komisi)</span></div>
+          </div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div style="display:flex;gap:8px;align-items:center;"><span style="font-size:20px;">❄️</span><div><p style="font-size:13px;font-weight:700;">Servis AC</p><p style="font-size:11px;color:var(--text-muted);">Rudi W. → Rina Permata</p></div></div>
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;background:#ECFDF5;color:#059669;border-radius:6px;">Selesai</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;border-top:0.5px solid var(--border);padding-top:8px;">
+            <span style="color:var(--text-muted);">#FN-20260412-002 · 08:45</span>
+            <div style="text-align:right;"><span style="font-weight:700;">Rp 200.000</span> <span style="color:var(--orange);font-weight:600;">(+Rp 30.000 komisi)</span></div>
+          </div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div style="display:flex;gap:8px;align-items:center;"><span style="font-size:20px;">⚡</span><div><p style="font-size:13px;font-weight:700;">Instalasi Listrik</p><p style="font-size:11px;color:var(--text-muted);">Siti M. → Dedi Kurniawan</p></div></div>
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;background:#ECFDF5;color:#059669;border-radius:6px;">Selesai</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;border-top:0.5px solid var(--border);padding-top:8px;">
+            <span style="color:var(--text-muted);">#FN-20260412-003 · 08:10</span>
+            <div style="text-align:right;"><span style="font-weight:700;">Rp 120.000</span> <span style="color:var(--orange);font-weight:600;">(+Rp 18.000 komisi)</span></div>
+          </div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+            <div style="display:flex;gap:8px;align-items:center;"><span style="font-size:20px;">💻</span><div><p style="font-size:13px;font-weight:700;">Servis Laptop</p><p style="font-size:11px;color:var(--text-muted);">Ahmad R. → Budi Santoso</p></div></div>
+            <span style="font-size:10px;font-weight:700;padding:3px 8px;background:#EFF6FF;color:#2563EB;border-radius:6px;">Aktif</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;border-top:0.5px solid var(--border);padding-top:8px;">
+            <span style="color:var(--text-muted);">#FN-20260412-004 · 07:55</span>
+            <div style="text-align:right;"><span style="font-weight:700;">Rp 250.000</span> <span style="color:var(--orange);font-weight:600;">(+Rp 37.500 komisi)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('admin-home')"><div class="nav-icon">📊</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item active" onclick="goTo('admin-orders')"><div class="nav-icon">📋</div><p class="nav-label">Order</p></div>
+      <div class="nav-item" onclick="goTo('admin-teknisi')"><div class="nav-icon">👨‍🔧</div><p class="nav-label">Teknisi</p></div>
+      <div class="nav-item" onclick="goTo('admin-finance')"><div class="nav-icon">💰</div><p class="nav-label">Keuangan</p></div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN: KELOLA TEKNISI ===== -->
+  <div id="admin-teknisi" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('admin-home')">←</button><p class="topbar-title">Kelola Teknisi</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button class="chip active tek-tab" onclick="chipSelectGroup(this,'.tek-tab')">Semua (50)</button>
+        <button class="chip tek-tab" onclick="chipSelectGroup(this,'.tek-tab')">Aktif (47)</button>
+        <button class="chip tek-tab" onclick="chipSelectGroup(this,'.tek-tab')">Pending (3)</button>
+      </div>
+      <p style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:8px;">⏳ Menunggu Verifikasi</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);border-left:3px solid #F59E0B;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div style="width:40px;height:40px;background:#FEF3C7;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;">👨‍🔧</div>
+              <div><p style="font-size:13px;font-weight:700;">Andi Prasetyo</p><p style="font-size:11px;color:var(--text-muted);">⚡ Listrik · Bekasi · 3 thn exp</p></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button style="flex:1;padding:9px;background:#FEE2E2;color:#DC2626;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);" onclick="rejectVerif(this)">✗ Tolak</button>
+            <button style="flex:2;padding:9px;background:#ECFDF5;color:#059669;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);" onclick="approveVerif(this)">✓ Verifikasi & Setujui</button>
+          </div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);border-left:3px solid #F59E0B;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="display:flex;gap:10px;align-items:center;">
+              <div style="width:40px;height:40px;background:#FEF3C7;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;">👩‍🔧</div>
+              <div><p style="font-size:13px;font-weight:700;">Siti Nurhaliza</p><p style="font-size:11px;color:var(--text-muted);">❄️ AC & Kulkas · Cikarang · 5 thn exp</p></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button style="flex:1;padding:9px;background:#FEE2E2;color:#DC2626;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);" onclick="rejectVerif(this)">✗ Tolak</button>
+            <button style="flex:2;padding:9px;background:#ECFDF5;color:#059669;border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);" onclick="approveVerif(this)">✓ Verifikasi & Setujui</button>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:13px;font-weight:700;color:#059669;margin-bottom:8px;">✓ Teknisi Aktif</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;">👨‍🔧</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:700;">Budi Santoso</p><p style="font-size:11px;color:var(--text-muted);">📱💻 · ⭐4.9 · 47 order · Online</p></div>
+          <div style="text-align:right;"><p style="font-size:12px;font-weight:700;color:var(--orange);">Rp 420rb</p><p style="font-size:10px;color:var(--text-muted);">hari ini</p></div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;">👩‍🔧</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:700;">Rina Permata</p><p style="font-size:11px;color:var(--text-muted);">❄️🧊 · ⭐4.8 · 38 order · Online</p></div>
+          <div style="text-align:right;"><p style="font-size:12px;font-weight:700;color:var(--orange);">Rp 360rb</p><p style="font-size:10px;color:var(--text-muted);">hari ini</p></div>
+        </div>
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;">
+          <div style="width:42px;height:42px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;">👨‍🔧</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:700;">Dedi Kurniawan</p><p style="font-size:11px;color:var(--text-muted);">⚡ · ⭐5.0 · 204 order · Online</p></div>
+          <div style="text-align:right;"><p style="font-size:12px;font-weight:700;color:var(--orange);">Rp 540rb</p><p style="font-size:10px;color:var(--text-muted);">hari ini</p></div>
+        </div>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('admin-home')"><div class="nav-icon">📊</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item" onclick="goTo('admin-orders')"><div class="nav-icon">📋</div><p class="nav-label">Order</p></div>
+      <div class="nav-item active" onclick="goTo('admin-teknisi')"><div class="nav-icon">👨‍🔧</div><p class="nav-label">Teknisi</p></div>
+      <div class="nav-item" onclick="goTo('admin-finance')"><div class="nav-icon">💰</div><p class="nav-label">Keuangan</p></div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN: KEUANGAN ===== -->
+  <div id="admin-finance" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('admin-home')">←</button><p class="topbar-title">Laporan Keuangan</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="background:linear-gradient(135deg,#1E3A5F,#0F2442);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center;">
+        <p style="font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:4px;">Total Pendapatan Bulan Ini</p>
+        <p style="font-size:32px;font-weight:800;color:white;margin-bottom:4px;">Rp 48.200.000</p>
+        <p style="font-size:13px;color:#22C55E;font-weight:600;">↑ +23% dibanding bulan lalu</p>
+      </div>
+      <div style="background:white;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <p style="font-size:14px;font-weight:700;margin-bottom:12px;">Breakdown Pendapatan</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;background:var(--orange-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;">📊</div><div><p style="font-size:13px;font-weight:600;">Komisi Transaksi (12%)</p><p style="font-size:11px;color:var(--text-muted);">dari 2.340 order selesai</p></div></div>
+            <p style="font-size:14px;font-weight:700;color:var(--orange);">Rp 36,8jt</p>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;background:var(--orange-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;">⭐</div><div><p style="font-size:13px;font-weight:600;">Membership Mitra Prioritas</p><p style="font-size:11px;color:var(--text-muted);">21 teknisi berlangganan</p></div></div>
+            <p style="font-size:14px;font-weight:700;color:var(--orange);">Rp 8,4jt</p>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;background:var(--orange-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;">📢</div><div><p style="font-size:13px;font-weight:600;">Iklan Toko Elektronik</p><p style="font-size:11px;color:var(--text-muted);">4 mitra iklan aktif</p></div></div>
+            <p style="font-size:14px;font-weight:700;color:var(--orange);">Rp 3,0jt</p>
+          </div>
+          <div style="border-top:0.5px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;align-items:center;gap:10px;"><div style="width:36px;height:36px;background:#FEE2E2;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;">🛡️</div><div><p style="font-size:13px;font-weight:600;">Dana Garansi (reserved)</p><p style="font-size:11px;color:var(--text-muted);">cadangan klaim aktif</p></div></div>
+            <p style="font-size:14px;font-weight:700;color:#DC2626;">- Rp 2,1jt</p>
+          </div>
+          <div style="background:var(--orange-light);border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+            <p style="font-size:14px;font-weight:700;color:var(--orange-dark);">Bersih Bulan Ini</p>
+            <p style="font-size:18px;font-weight:800;color:var(--orange-dark);">Rp 46,1jt</p>
+          </div>
+        </div>
+      </div>
+      <div style="background:white;border-radius:16px;padding:16px;margin-bottom:24px;box-shadow:0 1px 6px rgba(0,0,0,0.06);">
+        <p style="font-size:14px;font-weight:700;margin-bottom:12px;">Pencairan ke Rekening</p>
+        <div style="background:var(--gray-bg);border-radius:12px;padding:12px;margin-bottom:12px;">
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Rekening Tujuan</p>
+          <p style="font-size:14px;font-weight:700;">BCA · 1234 5678 9012</p>
+          <p style="font-size:12px;color:var(--text-muted);">a/n FixNow Platform</p>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px;">
+          <span style="color:var(--text-muted);">Saldo tersedia</span>
+          <span style="font-weight:700;color:var(--orange);">Rp 46.100.000</span>
+        </div>
+        <button class="btn-primary" style="width:100%;padding:14px;" onclick="alert('Fitur pencairan dana akan terhubung ke payment gateway (Midtrans/Xendit) saat launch. Saldo Rp 46.100.000 siap dicairkan!')">Cairkan Dana ke Rekening</button>
+        <p style="font-size:11px;color:var(--text-muted);text-align:center;margin-top:8px;">Proses 1x24 jam · Terhubung ke Midtrans</p>
+      </div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('admin-home')"><div class="nav-icon">📊</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item" onclick="goTo('admin-orders')"><div class="nav-icon">📋</div><p class="nav-label">Order</p></div>
+      <div class="nav-item" onclick="goTo('admin-teknisi')"><div class="nav-icon">👨‍🔧</div><p class="nav-label">Teknisi</p></div>
+      <div class="nav-item active" onclick="goTo('admin-finance')"><div class="nav-icon">💰</div><p class="nav-label">Keuangan</p></div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN: DATA PENGGUNA ===== -->
+  <div id="admin-users" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('admin-home')">←</button><p class="topbar-title">Data Pengguna</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:20px;font-weight:800;color:var(--orange);">1.247</p><p style="font-size:11px;color:var(--text-muted);">Total Pengguna</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:20px;font-weight:800;color:var(--orange);">+84</p><p style="font-size:11px;color:var(--text-muted);">Baru Bulan Ini</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:20px;font-weight:800;color:var(--orange);">68%</p><p style="font-size:11px;color:var(--text-muted);">Repeat Order</p></div>
+        <div style="background:white;border-radius:14px;padding:14px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,0.06);"><p style="font-size:20px;font-weight:800;color:var(--orange);">4.2x</p><p style="font-size:11px;color:var(--text-muted);">Avg Order / User</p></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:700;">Ahmad Reza</p><p style="font-size:11px;color:var(--text-muted);">7 order · Bergabung Jan 2026</p></div>
+          <span style="font-size:11px;font-weight:600;padding:3px 8px;background:#ECFDF5;color:#059669;border-radius:6px;">VIP</span>
+        </div>
+        <div style="background:white;border-radius:14px;padding:14px;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;background:var(--orange-light);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+          <div style="flex:1;"><p style="font-size:13px;font-weight:700;">Siti Mariam</p><p style="font-size:11px;color:var(--text-muted);">2 order · Bergabung Apr 2026</p></div>
+          <span style="font-size:11px;font-weight:600;padding:3px 8px;background:#EFF6FF;color:#2563EB;border-radius:6px;">Active</span>
+        </div>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="goTo('admin-home')"><div class="nav-icon">📊</div><p class="nav-label">Dashboard</p></div>
+      <div class="nav-item" onclick="goTo('admin-orders')"><div class="nav-icon">📋</div><p class="nav-label">Order</p></div>
+      <div class="nav-item" onclick="goTo('admin-teknisi')"><div class="nav-icon">👨‍🔧</div><p class="nav-label">Teknisi</p></div>
+      <div class="nav-item active" onclick="goTo('admin-finance')"><div class="nav-icon">💰</div><p class="nav-label">Keuangan</p></div>
+    </div>
+  </div>
+
+
+  <!-- ===== FITUR TAMBAHAN: CHAT ===== -->
+  <div id="chat" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('tracking')">←</button><p class="topbar-title">Chat Teknisi</p></div>
+    <div class="content-scroll" style="padding:16px;">
+      <div class="feature-card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;"><div class="tech-avatar">👨‍🔧</div><div><p style="font-size:14px;font-weight:800;">Budi Santoso</p><p style="font-size:12px;color:var(--text-muted);">Online - estimasi tiba 8 menit</p></div></div>
+        <div class="chat-box" id="chat-box"><div class="chat-bubble them">Halo, saya sedang menuju lokasi. Apakah perangkat masih bisa menyala?</div><div class="chat-bubble me">Masih menyala, tapi layarnya sering mati sendiri.</div><div class="chat-bubble them">Baik, nanti saya cek konektor layar dan baterainya.</div></div>
+        <div class="chat-compose"><input id="chat-input" class="form-input" placeholder="Tulis pesan..." onkeydown="if(event.key==='Enter')sendChatMessage()"><button class="btn-primary" style="padding:0 16px;" onclick="sendChatMessage()">Kirim</button></div>
+      </div>
+    </div>
+    <div class="bottom-nav"><div class="nav-item" onclick="goTo('home')"><div class="nav-icon">🏠</div><p class="nav-label">Beranda</p></div><div class="nav-item" onclick="goTo('order')"><div class="nav-icon">📋</div><p class="nav-label">Pesan</p></div><div class="nav-item active" onclick="goTo('tracking')"><div class="nav-icon">📍</div><p class="nav-label">Lacak</p></div><div class="nav-item" onclick="goTo('profile')"><div class="nav-icon">👤</div><p class="nav-label">Profil</p></div></div>
+  </div>
+
+  <!-- ===== FITUR TAMBAHAN: WALLET ===== -->
+  <div id="wallet" class="screen">
+    <div class="topbar"><button class="topbar-back" onclick="goTo('profile')">←</button><p class="topbar-title">Dompet & Pembayaran</p></div>
+    <div class="content-scroll" style="padding:16px;"><div style="background:linear-gradient(135deg,var(--blue-dark),#0F2442);border-radius:18px;padding:20px;color:white;margin-bottom:12px;"><p style="font-size:12px;opacity:0.7;">Saldo FixNow Pay</p><p style="font-size:28px;font-weight:800;margin:6px 0;">Rp 350.000</p><p style="font-size:12px;opacity:0.7;">Cashback tersedia: Rp 25.000</p></div><div class="feature-grid"><div class="feature-card"><p style="font-size:14px;font-weight:800;margin-bottom:10px;">Metode Pembayaran</p><div class="feature-row"><span>💳 Kartu Debit BCA</span><button class="mini-btn">Utama</button></div><div class="feature-row"><span>📱 QRIS / E-Wallet</span><button class="mini-btn">Aktif</button></div><div class="feature-row"><span>💵 Bayar di Tempat</span><button class="mini-btn">Aktif</button></div></div><div class="feature-card"><p style="font-size:14px;font-weight:800;margin-bottom:10px;">Transaksi Terakhir</p><div class="feature-row"><span>Servis Laptop</span><b>Rp 250.000</b></div><div class="feature-row"><span>Top Up Saldo</span><b style="color:#059669;">+Rp 200.000</b></div><button class="btn-primary" style="width:100%;margin-top:10px;" onclick="alert('Simulasi top up berhasil. Saldo bertambah Rp 100.000')">Top Up Saldo</button></div></div></div>
+  </div>
+
+  <!-- ===== FITUR TAMBAHAN: VOUCHER ===== -->
+  <div id="voucher" class="screen"><div class="topbar"><button class="topbar-back" onclick="goTo('home')">←</button><p class="topbar-title">Voucher & Promo</p></div><div class="content-scroll" style="padding:16px;"><div class="form-card"><p class="form-label">Masukkan Kode Voucher</p><div style="display:flex;gap:8px;"><input id="voucher-code" class="form-input" placeholder="Contoh: FIXNOW30"><button class="btn-primary" style="padding:0 16px;" onclick="applyVoucher()">Pakai</button></div><p id="voucher-result" style="font-size:12px;color:#059669;margin-top:8px;min-height:16px;"></p></div><div class="feature-grid"><div class="feature-card"><p style="font-size:14px;font-weight:800;">FIXNOW30</p><p style="font-size:12px;color:var(--text-muted);margin:4px 0 12px;">Diskon 30% untuk pesanan pertama.</p><button class="mini-btn dark" onclick="document.getElementById('voucher-code').value='FIXNOW30';applyVoucher()">Gunakan</button></div><div class="feature-card"><p style="font-size:14px;font-weight:800;">HEMATAC</p><p style="font-size:12px;color:var(--text-muted);margin:4px 0 12px;">Potongan Rp 50.000 untuk servis AC.</p><button class="mini-btn dark" onclick="document.getElementById('voucher-code').value='HEMATAC';applyVoucher()">Gunakan</button></div></div></div></div>
+
+  <!-- ===== FITUR TAMBAHAN: SCHEDULE ===== -->
+  <div id="schedule" class="screen"><div class="topbar"><button class="topbar-back" onclick="goTo('home')">←</button><p class="topbar-title">Jadwalkan Servis</p></div><div class="content-scroll" style="padding:16px;"><div class="form-card"><p class="form-label">Tanggal</p><input id="schedule-date" class="form-input" type="date"></div><div class="form-card"><p class="form-label">Jam Kunjungan</p><div class="service-chips"><button class="chip active schedule-chip" onclick="chipSelectGroup(this,'.schedule-chip')">09:00</button><button class="chip schedule-chip" onclick="chipSelectGroup(this,'.schedule-chip')">13:00</button><button class="chip schedule-chip" onclick="chipSelectGroup(this,'.schedule-chip')">16:00</button><button class="chip schedule-chip" onclick="chipSelectGroup(this,'.schedule-chip')">19:00</button></div></div><button class="btn-order" onclick="saveSchedule()">Simpan Jadwal Servis</button></div></div>
+
+  <!-- ===== FITUR TAMBAHAN: ADDRESS ===== -->
+  <div id="address" class="screen"><div class="topbar"><button class="topbar-back" onclick="goTo('profile')">←</button><p class="topbar-title">Alamat Tersimpan</p></div><div class="content-scroll" style="padding:16px;"><div id="address-list" class="feature-card"><div class="feature-row"><div><p style="font-size:14px;font-weight:800;">Rumah</p><p style="font-size:12px;color:var(--text-muted);">Cikarang Selatan, Bekasi</p></div><button class="mini-btn">Utama</button></div><div class="feature-row"><div><p style="font-size:14px;font-weight:800;">Kampus</p><p style="font-size:12px;color:var(--text-muted);">Universitas Pelita Bangsa</p></div><button class="mini-btn">Pilih</button></div></div><div class="form-card" style="margin-top:12px;"><p class="form-label">Tambah Alamat</p><textarea id="new-address" class="form-input" rows="3" placeholder="Tulis alamat lengkap..."></textarea><button class="btn-primary" style="width:100%;margin-top:10px;" onclick="addAddress()">Tambah Alamat</button></div></div></div>
+
+  <!-- ===== FITUR TAMBAHAN: SUPPORT ===== -->
+  <div id="support" class="screen"><div class="topbar"><button class="topbar-back" onclick="goTo('profile')">←</button><p class="topbar-title">Bantuan & FAQ</p></div><div class="content-scroll" style="padding:16px;"><div class="feature-card"><div class="feature-row"><div><p style="font-size:14px;font-weight:800;">Bagaimana klaim garansi?</p><p style="font-size:12px;color:var(--text-muted);">Buka Garansi Aktif lalu pilih klaim pada pesanan terkait.</p></div></div><div class="feature-row"><div><p style="font-size:14px;font-weight:800;">Berapa lama teknisi datang?</p><p style="font-size:12px;color:var(--text-muted);">Rata-rata 15-30 menit untuk area terdekat.</p></div></div><div class="feature-row"><div><p style="font-size:14px;font-weight:800;">Kontak bantuan</p><p style="font-size:12px;color:var(--text-muted);">WhatsApp: 0812-0000-2026</p></div><button class="mini-btn dark" onclick="goTo('chat')">Chat</button></div></div></div></div>
+
+  <!-- ===== FITUR TAMBAHAN: NOTIFICATIONS ===== -->
+  <div id="notifications" class="screen"><div class="topbar"><button class="topbar-back" onclick="goTo('home')">←</button><p class="topbar-title">Notifikasi</p></div><div class="content-scroll" style="padding:16px;"><div id="notif-list" class="feature-card"><div class="feature-row"><div><p style="font-size:14px;font-weight:800;">Teknisi menuju lokasi</p><p style="font-size:12px;color:var(--text-muted);">Budi Santoso tiba sekitar 8 menit lagi.</p></div><button class="mini-btn" onclick="markNotifRead(this)">Tandai</button></div><div class="feature-row"><div><p style="font-size:14px;font-weight:800;">Voucher baru aktif</p><p style="font-size:12px;color:var(--text-muted);">Gunakan HEMATAC untuk servis AC.</p></div><button class="mini-btn" onclick="markNotifRead(this)">Tandai</button></div></div></div></div>
+  <!-- ===== ADMIN LOGIN MODAL ===== -->
+  <div class="modal-overlay" id="modal-admin-login" style="z-index:1000;">
+    <div class="modal-sheet">
+      <p style="font-size:36px;margin-bottom:8px;">🔐</p>
+      <p style="font-size:18px;font-weight:800;margin-bottom:4px;">Admin Access</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:20px;">Masukkan password untuk melanjutkan</p>
+      <input id="admin-pass-input" type="password" class="form-input" placeholder="Password admin..." onkeydown="if(event.key==='Enter')checkAdminPass()" style="margin-bottom:8px;text-align:center;letter-spacing:4px;font-size:18px;">
+      <p id="admin-pass-error" style="font-size:12px;color:#DC2626;text-align:center;margin-bottom:12px;min-height:16px;"></p>
+      <button class="btn-primary" style="width:100%;margin-bottom:10px;" onclick="checkAdminPass()">Masuk</button>
+      <button style="width:100%;padding:12px;background:transparent;border:none;font-size:14px;color:var(--text-muted);cursor:pointer;font-family:var(--font);" onclick="closeAdminLogin()">Batal</button>
+    </div>
+  </div>
+
+  <!-- ===== MODAL SUCCESS ===== -->
+  <div class="modal-overlay" id="modal-success">
+    <div class="modal-sheet">
+      <p class="modal-icon">🎉</p>
+      <p class="modal-title">Pesanan Berhasil!</p>
+      <p class="modal-sub">Teknisi terdekat sedang dihubungi. Konfirmasi dalam &lt;15 menit. Garansi 7 hari berlaku setelah servis selesai.</p>
+      <button class="btn-primary modal-btn" onclick="closeModal()">Lacak Teknisi Sekarang</button>
+    </div>
+  </div>
+
+  <!-- ===== NAME EDIT MODAL ===== -->
+  <div class="modal-overlay" id="modal-name-edit">
+    <div class="modal-sheet">
+      <p style="font-size:36px;margin-bottom:8px;">✏️</p>
+      <p style="font-size:18px;font-weight:800;margin-bottom:4px;">Ubah Nama Panggilan</p>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Nama ini yang akan muncul di halaman utama kamu.</p>
+      <input id="name-edit-input" type="text" class="form-input" placeholder="Nama panggilan baru..." maxlength="30" style="margin-bottom:12px;text-align:center;font-size:16px;" onkeydown="if(event.key==='Enter')saveNameEdit()">
+      <button class="btn-primary" style="width:100%;margin-bottom:10px;" onclick="saveNameEdit()">Simpan</button>
+      <button style="width:100%;padding:12px;background:transparent;border:none;font-size:14px;color:var(--text-muted);cursor:pointer;font-family:var(--font);" onclick="closeNameEdit()">Batal</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== STATE =====
+const priceMap = { smartphone:150000, laptop:250000, ac:200000, kulkas:175000, tv:180000, 'mesin-cuci':160000, listrik:120000 };
+const serviceNames = { smartphone:'Servis Smartphone', laptop:'Servis Laptop', ac:'Servis AC', kulkas:'Servis Kulkas', tv:'Servis Televisi', 'mesin-cuci':'Servis Mesin Cuci', listrik:'Servis Listrik' };
+let activeService = 'smartphone';
+let currentRole = 'pelanggan';
+let selectedOnboardRole = '';
+let isOnline = true;
+
+// ===== LOCALSTORAGE USER =====
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('fixnow_user') || 'null'); } catch(e) { return null; }
+}
+function saveUser(data) {
+  try { localStorage.setItem('fixnow_user', JSON.stringify(data)); } catch(e) {}
+}
+
+// ===== ONBOARDING =====
+function selectRole(role) {
+  selectedOnboardRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('role-' + role).classList.add('selected');
+  checkOnboard();
+}
+function checkOnboard() {
+  const name = document.getElementById('onboard-name').value.trim();
+  const cta = document.getElementById('onboard-cta');
+  if (name.length >= 2 && selectedOnboardRole) {
+    cta.classList.add('ready');
+  } else {
+    cta.classList.remove('ready');
+  }
+}
+function finishOnboard() {
+  const name = document.getElementById('onboard-name').value.trim();
+  if (!name || !selectedOnboardRole) return;
+  saveUser({ name, role: selectedOnboardRole });
+  document.getElementById('onboarding-overlay').classList.remove('show');
+  applyUser(name, selectedOnboardRole);
+  if (selectedOnboardRole === 'teknisi') {
+    goTo('tech-home');
+  } else {
+    goTo('home');
+  }
+}
+
+// ===== APPLY USER =====
+function applyUser(name, role) {
+  currentRole = role;
+  const greetings = ['Selamat pagi', 'Selamat siang', 'Selamat sore', 'Selamat malam'];
+  const hr = new Date().getHours();
+  const greet = hr < 11 ? greetings[0] : hr < 15 ? greetings[1] : hr < 18 ? greetings[2] : greetings[3];
+  const el = document.getElementById('home-greeting');
+  if (el) el.textContent = greet + ' 👋';
+  const nameEls = ['home-username', 'profile-username', 'tech-home-name', 'tech-profile-name'];
+  nameEls.forEach(id => { const e = document.getElementById(id); if (e) e.textContent = name; });
+}
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded', () => {
+  const user = getUser();
+  if (user && user.name) {
+    document.getElementById('onboarding-overlay').classList.remove('show');
+    applyUser(user.name, user.role || 'pelanggan');
+    // start at splash always (to pick role each visit) or go direct
+    goTo('splash');
+  } else {
+    document.getElementById('onboarding-overlay').classList.add('show');
+  }
+});
+
+// ===== NAVIGATION =====
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(screen);
+  if (el) { el.classList.add('active'); window.scrollTo(0,0); }
+}
+
+function loginAs(role) {
+  const user = getUser();
+  if (user && user.name) {
+    applyUser(user.name, role);
+    saveUser({ name: user.name, role });
+  }
+  if (role === 'pelanggan') goTo('home');
+  else if (role === 'teknisi') goTo('tech-home');
+}
+
+function logout() {
+  localStorage.removeItem('fixnow_user');
+  document.getElementById('onboarding-overlay').classList.add('show');
+  document.getElementById('onboard-name').value = '';
+  selectedOnboardRole = '';
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('onboard-cta').classList.remove('ready');
+  goTo('splash');
+}
+
+// ===== NAME EDIT =====
+function showNameEdit() {
+  const user = getUser();
+  const input = document.getElementById('name-edit-input');
+  if (input && user) input.value = user.name;
+  document.getElementById('modal-name-edit').classList.add('show');
+  setTimeout(() => { if (input) input.focus(); }, 100);
+}
+function closeNameEdit() { document.getElementById('modal-name-edit').classList.remove('show'); }
+function saveNameEdit() {
+  const val = document.getElementById('name-edit-input').value.trim();
+  if (!val || val.length < 2) { alert('Nama minimal 2 karakter ya!'); return; }
+  const user = getUser() || {};
+  user.name = val;
+  saveUser(user);
+  applyUser(val, user.role || currentRole);
+  closeNameEdit();
+}
+
+// ===== SERVICE =====
+function selectService(svc) {
+  activeService = svc;
+  document.querySelectorAll('#order .service-chips .chip').forEach(c => c.classList.remove('active'));
+  const t = document.getElementById('chip-' + svc);
+  if (t) t.classList.add('active');
+  updatePrice(svc);
+  goTo('order');
+}
+function chipSelect(el, svc) {
+  activeService = svc;
+  document.querySelectorAll('#order .service-chips .chip').forEach(c => { if (!c.classList.contains('damage-chip')) c.classList.remove('active'); });
+  el.classList.add('active');
+  updatePrice(svc);
+}
+function chipSelectGroup(el, groupSelector) {
+  document.querySelectorAll(groupSelector).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+function updatePrice(svc) {
+  const p = priceMap[svc] || 150000;
+  const fmt = 'Rp ' + p.toLocaleString('id-ID');
+  const d = document.getElementById('price-display');
+  if (d) d.textContent = fmt;
+  const btn = document.getElementById('btn-order-main');
+  if (btn) btn.textContent = 'Pesan Sekarang — ' + fmt;
+}
+function selectPay(el) { document.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('active')); el.classList.add('active'); }
+
+// ===== ORDER =====
+function placeOrder() {
+  const p = priceMap[activeService] || 150000;
+  const fmt = 'Rp ' + p.toLocaleString('id-ID');
+  const svcEl = document.getElementById('order-service-display');
+  const priceEl = document.getElementById('order-price-display');
+  if (svcEl) svcEl.textContent = serviceNames[activeService] || 'Servis';
+  if (priceEl) priceEl.textContent = fmt;
+  document.getElementById('modal-success').classList.add('show');
+}
+function closeModal() { document.getElementById('modal-success').classList.remove('show'); goTo('tracking'); }
+
+// ===== TRACKING TIMER =====
+let eta = 12;
+setInterval(() => {
+  const el = document.getElementById('eta-count');
+  if (!el) return;
+  if (eta > 1) { eta--; el.textContent = eta + ' menit'; }
+  else { el.textContent = 'kurang dari 1 menit'; }
+}, 5000);
+
+// ===== HISTORY =====
+function filterHistory(el, filter) {
+  document.querySelectorAll('.hist-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.hist-item').forEach(item => {
+    item.style.display = (filter === 'semua' || item.dataset.status === filter) ? '' : 'none';
+  });
+}
+
+// ===== RATING =====
+let currentRating = 0;
+const ratingLabels = ['','Sangat Buruk','Kurang Baik','Cukup','Bagus','Luar Biasa! 🤩'];
+function setRating(val) {
+  currentRating = val;
+  document.querySelectorAll('.star').forEach(s => { s.style.opacity = parseInt(s.dataset.val) <= val ? '1' : '0.3'; });
+  const lbl = document.getElementById('rating-label');
+  if (lbl) lbl.textContent = ratingLabels[val] || '';
+}
+function toggleTag(el) { el.classList.toggle('active'); }
+function submitRating() {
+  if (currentRating === 0) { alert('Silakan beri nilai bintang terlebih dahulu.'); return; }
+  alert('Terima kasih! Ulasan kamu telah dikirim. Rating ' + currentRating + '/5 ⭐');
+  goTo('history');
+}
+
+// ===== MITRA =====
+function submitMitra() { alert('Pendaftaran berhasil! Tim FixNow akan menghubungi kamu dalam 1-2 hari kerja untuk verifikasi identitas dan uji kompetensi.'); goTo('profile'); }
+
+// ===== TEKNISI =====
+function toggleOnline() {
+  isOnline = !isOnline;
+  const dot = document.getElementById('status-dot');
+  const txt = document.getElementById('status-text');
+  if (dot) dot.style.background = isOnline ? '#22C55E' : '#94A3B8';
+  if (txt) txt.textContent = isOnline ? 'Online' : 'Offline';
+}
+function acceptOrder(btn) {
+  const card = btn.closest('div[style*="border:1.5px solid var(--orange)"]');
+  if (card) { card.style.border = '1.5px solid #22C55E'; btn.textContent = '✓ Order Diterima!'; btn.style.background = '#059669'; btn.disabled = true; }
+}
+function rejectOrder(btn) { const card = btn.closest('div[style*="border:1.5px solid var(--orange)"]'); if (card) card.style.display = 'none'; }
+function finishOrder() { alert('Order berhasil diselesaikan! Dana Rp 220.000 akan dicairkan dalam 1x24 jam ke rekening kamu.'); goTo('tech-home'); }
+
+// ===== ADMIN =====
+let tapCount = 0, tapTimer = null;
+function adminTap() {
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+  if (tapCount >= 5) { tapCount = 0; document.getElementById('modal-admin-login').classList.add('show'); setTimeout(() => { const inp = document.getElementById('admin-pass-input'); if (inp) inp.focus(); }, 100); }
+}
+const ADMIN_PASS = 'fixnow2026';
+function checkAdminPass() {
+  const val = document.getElementById('admin-pass-input').value;
+  const err = document.getElementById('admin-pass-error');
+  if (val === ADMIN_PASS) { document.getElementById('modal-admin-login').classList.remove('show'); document.getElementById('admin-pass-input').value = ''; err.textContent = ''; goTo('admin-home'); }
+  else { err.textContent = 'Password salah. Coba lagi.'; document.getElementById('admin-pass-input').value = ''; document.getElementById('admin-pass-input').focus(); }
+}
+function closeAdminLogin() { document.getElementById('modal-admin-login').classList.remove('show'); document.getElementById('admin-pass-input').value = ''; document.getElementById('admin-pass-error').textContent = ''; }
+function approveVerif(btn) { const card = btn.closest('div[style*="border-left"]'); if (card) { btn.textContent = '✓ Disetujui'; btn.style.background = '#ECFDF5'; btn.style.color = '#059669'; btn.disabled = true; card.querySelectorAll('button').forEach(b => b.disabled = true); } }
+function rejectVerif(btn) { const card = btn.closest('div[style*="border-left"]'); if (card) { card.style.opacity = '0.4'; card.style.pointerEvents = 'none'; } }
+
+// ===== FITUR TAMBAHAN =====
+function quickAdminAccess() {
+  const modal = document.getElementById('modal-admin-login');
+  if (modal) modal.classList.add('show');
+  setTimeout(() => { const inp = document.getElementById('admin-pass-input'); if (inp) inp.focus(); }, 100);
+}
+function applyVoucher() {
+  const input = document.getElementById('voucher-code');
+  const result = document.getElementById('voucher-result');
+  if (!input || !result) return;
+  const code = input.value.trim().toUpperCase();
+  if (code === 'FIXNOW30') result.textContent = 'Voucher FIXNOW30 aktif. Diskon 30% akan dipakai di pesanan berikutnya.';
+  else if (code === 'HEMATAC') result.textContent = 'Voucher HEMATAC aktif. Potongan Rp 50.000 untuk servis AC.';
+  else result.textContent = 'Kode belum tersedia. Coba FIXNOW30 atau HEMATAC.';
+}
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const box = document.getElementById('chat-box');
+  if (!input || !box) return;
+  const msg = input.value.trim();
+  if (!msg) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble me';
+  bubble.textContent = msg;
+  box.appendChild(bubble);
+  input.value = '';
+  box.scrollTop = box.scrollHeight;
+}
+function saveSchedule() {
+  const date = document.getElementById('schedule-date');
+  const time = document.querySelector('.schedule-chip.active');
+  if (!date || !date.value) { alert('Pilih tanggal servis terlebih dahulu.'); return; }
+  alert('Jadwal servis disimpan: ' + date.value + ' pukul ' + (time ? time.textContent : '09:00'));
+  goTo('order');
+}
+function addAddress() {
+  const input = document.getElementById('new-address');
+  const list = document.getElementById('address-list');
+  if (!input || !list) return;
+  const val = input.value.trim();
+  if (val.length < 8) { alert('Alamat terlalu pendek. Tulis alamat yang lebih lengkap.'); return; }
+  const row = document.createElement('div');
+  row.className = 'feature-row';
+  row.innerHTML = '<div><p style="font-size:14px;font-weight:800;">Alamat Baru</p><p style="font-size:12px;color:var(--text-muted);"></p></div><button class="mini-btn">Pilih</button>';
+  row.querySelector('p:nth-child(2)').textContent = val;
+  list.appendChild(row);
+  input.value = '';
+}
+function markNotifRead(btn) {
+  const row = btn.closest('.feature-row');
+  if (row) { row.style.opacity = '0.45'; btn.textContent = 'Dibaca'; btn.disabled = true; }
+}
+</script>
+</body>
+</html>
